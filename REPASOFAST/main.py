@@ -18,3 +18,4 @@ tareas = [
 @app.get("/tareas")
 def obtener_tareas():
     return tareas
+
