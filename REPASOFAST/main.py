@@ -19,3 +19,10 @@ tareas = [
 def obtener_tareas():
     return tareas
 
+#b. Obtener una tarea específica por su ID.
+@app.get("/tareas/{id}")
+def obtener_tarea(id: int):
+    for tarea in tareas:
+        if tarea["id"] == id:
+            return tarea
+    raise HTTPException(status_code=404, detail="Tarea no encontrada")
