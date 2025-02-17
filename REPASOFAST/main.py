@@ -36,3 +36,11 @@ def crear_tarea(tarea: dict):
     tareas.append(tarea)
     return {"mensaje": "Tarea creada exitosamente", "tarea": tarea}
 
+#d. Actualizar una tarea existente.
+@app.put("/tareas/{id}")
+def actualizar_tarea(id: int, tarea_actualizada: dict):
+    for tarea in tareas:
+        if tarea["id"] == id:
+            tarea.update(tarea_actualizada)
+            return {"mensaje": "Tarea actualizada exitosamente", "tarea": tarea}
+    raise HTTPException(status_code=404, detail="Tarea no encontrada")
