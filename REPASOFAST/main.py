@@ -1,73 +1,63 @@
 from fastapi import FastAPI, HTTPException
+from typing import Optional, List # define para que los caracteres en las api sean opcionales o no
+from pydantic import BaseModel
 
 app = FastAPI(
-    title = "Mi primer API",
-    description = "Jose Armando Mauricio Acevedo",
-    version = "10.0.0.1"
+    title="Mi primera API",
+    description="José Armando Mauricio Acevedo",
+    version="1.0.1"
 )
+class modelUsuario(BaseModel):
+    id: int
+    nombre: str
+    edad: int
+    correo: str
 
-tareas = [
-    {
-        "id": 1,
-        "titulo": "Estudiar para el examen",
-        "descripcion": "Repasar los apuntes de TAI",
-        "vencimiento": "14-02-2025",
-        "estado": "completada"
-    },
-    {
-        "id": 2,
-        "titulo": "Estudiar para el examen",
-        "descripcion": "Repasar los apuntes de TAI",
-        "vencimiento": "11-02-2025",
-        "estado": "completada"
-    },
-    {
-        "id": 3,
-        "titulo": "Estudiar para el examen",
-        "descripcion": "Repasar los apuntes de TAI",
-        "vencimiento": "14-01-2025",
-        "estado": "incompletada"
-    }
+usuarios=[
+    {"id":1, "nombre":" Pepe", "edad":20,"correo":"pepe@gmail.com"},
+    {"id":2, "nombre":"Gonza", "edad":20,"correo":"gonza@gmail.com"},
+    {"id":3, "nombre":"Karla", "edad":21,"correo":"karla@gmail.com"},
+    {"id":4, "nombre":"Maru", "edad":22,"correo":"maru@gmail.com"},
 ]
 
-#ENDPOINTS
+@app.get("/", tags=['Inicio'])
+def main():
+    return{"message": "!Bienvenido a FastAPI!"}
 
-#a. Obtener todas las tareas.
-@app.get("/tareas", tags = ["Obten todas las tareas"])
-def obtener_tareas():
-    return tareas
 
-#b. Obtener una tarea específica por su ID.
-@app.get("/tareas/{id}", tags = ["Encuentra una tarea por ID"])
-def obtener_tarea(id: int):
-    for tarea in tareas:
-        if tarea["id"] == id:
-            return tarea
-    raise HTTPException(status_code=404, detail="Tarea no encontrada")
 
-#c. Crear una nueva tarea.
-@app.post("/tareas", tags = ["Crea tareas"])
-def crear_tarea(tarea: dict):
-    for t in tareas:
-        if t["id"] == tarea["id"]:
-            raise HTTPException(status_code=400, detail="El ID de la tarea ya existe")
-    tareas.append(tarea)
-    return {"mensaje": "Tarea creada exitosamente", "tarea": tarea}
+# Enpoint CONSULTA TODOS
+@app.get("/todosUsuarios/", response_model=List[modelUsuario], tags=['Operaciones CRUD'])
+def leer():
+    return usuarios
 
-#d. Actualizar una tarea existente.
-@app.put("/tareas/{id}", tags = ["Actualiza tus tareas"])
-def actualizar_tarea(id: int, tarea_actualizada: dict):
-    for tarea in tareas:
-        if tarea["id"] == id:
-            tarea.update(tarea_actualizada)
-            return {"mensaje": "Tarea actualizada exitosamente", "tarea": tarea}
-    raise HTTPException(status_code=404, detail="Tarea no encontrada")
 
-#e. Eliminar una tarea.
-@app.delete("/tareas/{id}", tags = ["Elimina tareas"])
-def eliminar_tarea(id: int):
-    for tarea in tareas:
-        if tarea["id"] == id:
-            tareas.remove(tarea)
-            return {"mensaje": "Tarea eliminada exitosamente"}
-    raise HTTPException(status_code=404, detail="Tarea no encontrada")
+#Endpoint de tipo POST
+@app.post("/usuarios/", response_model= modelUsuario, tags=['Operaciones CRUD'])
+def guardar(usuario:modelUsuario):
+    for usr in usuarios:
+        if usr["id"]==usuario.id:
+         raise HTTPException(status_code=400, detail="El usuario ya existe")
+    usuarios.append(usuario.dict())
+    return usuario
+
+#Endpoint para actualizar
+@app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
+def actualizar(id:int, usuarioActualizado: modelUsuario):
+    for index, usr in enumerate(usuarios):
+        if usr["id"]==id:
+            usuarios[index]=usuarioActualizado.model_dump()
+            return usuarios[index]
+    raise HTTPException(status_code=400, detail="El usuario no existe")
+
+
+
+#Endpoint para eliminar
+@app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
+def eliminar(id:int):
+    for index, usr in enumerate(usuarios):
+        if usr["id"]==id:
+            usuarios.pop(index)
+            return { 'Usuarios Registrados: ': usuarios}
+    raise HTTPException(status_code=400, detail="El usuario no existe")
+    
