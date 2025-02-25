@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
-from typing import Optional, List # define para que los caracteres en las api sean opcionales o no
+from typing import Optional, List 
 from pydantic import BaseModel
+from models import modelUsuario
 
 app = FastAPI(
     title="Mi primera API",
@@ -32,7 +33,7 @@ def leer():
     return usuarios
 
 
-#Endpoint de tipo POST
+#Endpoint para guardar usuarios
 @app.post("/usuarios/", response_model= modelUsuario, tags=['Operaciones CRUD'])
 def guardar(usuario:modelUsuario):
     for usr in usuarios:
@@ -41,7 +42,7 @@ def guardar(usuario:modelUsuario):
     usuarios.append(usuario.dict())
     return usuario
 
-#Endpoint para actualizar
+#Endpoint para actualizar usuarios
 @app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado: modelUsuario):
     for index, usr in enumerate(usuarios):
@@ -52,7 +53,7 @@ def actualizar(id:int, usuarioActualizado: modelUsuario):
 
 
 
-#Endpoint para eliminar
+#Endpoint para eliminar usuarios
 @app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
 def eliminar(id:int):
     for index, usr in enumerate(usuarios):
@@ -60,4 +61,3 @@ def eliminar(id:int):
             usuarios.pop(index)
             return { 'Usuarios Registrados: ': usuarios}
     raise HTTPException(status_code=400, detail="El usuario no existe")
-    

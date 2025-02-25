@@ -1,53 +1,51 @@
 from fastapi import FastAPI, HTTPException
-from typing import Optional
+from typing import Optional, List
+from pydantic import BaseModel
+from models import modelUsuario
 
 app = FastAPI(
-    title = "Mi primer API",
-    description = "Jose Armando",
-    version = "10.0.0.1"
+    title="Mi primera API",
+    description="José Armando Mauricio Acevedo",
+    version="1.0.1"
 )
 
+# Ya NO definas nuevamente la clase modelUsuario aquí.
+
 usuarios = [
-    {"id":1, "nombre":"Jose", "edad":21},
-    {"id":2, "nombre":"Pepe", "edad":20},
-    {"id":3, "nombre":"Gonza", "edad":19},
-    {"id":4, "nombre":"Perla", "edad":21},
+    {"id": 1, "nombre": "Pepe", "edad": 20, "correo": "pepe@gmail.com"},
+    {"id": 2, "nombre": "Gonza", "edad": 20, "correo": "gonza@gmail.com"},
+    {"id": 3, "nombre": "Karla", "edad": 21, "correo": "karla@gmail.com"},
+    {"id": 4, "nombre": "Maru", "edad": 22, "correo": "maru@gmail.com"},
 ]
 
-#Ruta o EndPoint
-@app.get('/', tags = ["inicio"])
-def home():
-    return {'Hola':'mundo FastAPI'}
+@app.get("/", tags=['Inicio'])
+def main():
+    return {"message": "!Bienvenido a FastAPI!"}
 
-#Ruta o EndPoint para consultar todos los usuarios
-@app.get('/todosUsuarios', tags = ["Operaciones CRUD"])
+@app.get("/todosUsuarios/", response_model=List[modelUsuario], tags=['Operaciones CRUD'])
 def leer():
-    return {'Usuarios' : usuarios}
+    return usuarios
 
-#Ruta o EndPoint POST
-@app.post('/usuarios/', tags = ["Operaciones CRUD"])
-def guardar(usuario:dict):
+@app.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
+def guardar(usuario: modelUsuario):
     for usr in usuarios:
-        if usr["id"] == usuario.get("id"):
-            raise HTTPException(status_code = 400, detail = "El usuario ya existe") #Sirve para marcar error
-    usuarios.append(usuario)
+        if usr["id"] == usuario.id:
+            raise HTTPException(status_code=400, detail="El usuario ya existe")
+    usuarios.append(usuario.dict())
     return usuario
 
-#Ruta o EndPoint para actualizar
-@app.put('/usuarios/{id}', tags = ["Operaciones CRUD"])
-def actualizar(id:int, usuarioActualizado:dict):
+@app.put("/usuarios/{id}", response_model=modelUsuario, tags=['Operaciones CRUD'])
+def actualizar(id: int, usuarioActualizado: modelUsuario):
     for index, usr in enumerate(usuarios):
         if usr["id"] == id:
-            usuarios[index].update(usuarioActualizado)
+            usuarios[index] = usuarioActualizado.model_dump()
             return usuarios[index]
-    raise HTTPException(status_code = 400, detail = "El usuario no existe")
+    raise HTTPException(status_code=400, detail="El usuario no existe")
 
-#Ruta o EndPoint para eliminar
-@app.delete('/usuarios/{id}', tags = ["Operaciones CRUD"])
-def eliminar(id:int, usuarioEliminado:dict):
+@app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
+def eliminar(id: int):
     for index, usr in enumerate(usuarios):
-        if usr["id"]==id:
-            del usuarios[index]
-            return ("El usuario ha sido eliminado")
-        else:
-            raise HTTPException(status_code=404, detail="El usuario no ha sido encontrado")
+        if usr["id"] == id:
+            usuarios.pop(index)
+            return {'Usuarios Registrados: ': usuarios}
+    raise HTTPException(status_code=400, detail="El usuario no existe")
