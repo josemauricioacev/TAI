@@ -1,65 +1,77 @@
-from fastapi import FastAPI, HTTPException
-from typing import Optional, List
+from fastapi import FastAPI, HTTPException, Depends
+from typing import Optional, List # define para que los caracteres en las api sean opcionales o no
 from pydantic import BaseModel
 from models import modelUsuario, modelAuth
 from genToken import createToken
+from middleware import BearerJWT
 
 app = FastAPI(
     title="Mi primera API",
-    description="José Armando Mauricio Acevedo",
+    description="Jose Armando Mauricio Acevedo",
     version="1.0.1"
 )
 
-
-usuarios = [
-    {"id": 1, "nombre": "Pepe", "edad": 20, "correo": "pepe@gmail.com"},
-    {"id": 2, "nombre": "Gonza", "edad": 20, "correo": "gonza@gmail.com"},
-    {"id": 3, "nombre": "Karla", "edad": 21, "correo": "karla@gmail.com"},
-    {"id": 4, "nombre": "Maru", "edad": 22, "correo": "maru@gmail.com"},
+usuarios=[
+    {"id":1, "nombre":"Armando", "edad":20,"correo":"armando@gmail.com"},
+    {"id":2, "nombre":"Pepe", "edad":20,"correo":"pepe@gmail.com"},
+    {"id":3, "nombre":"Gonza", "edad":21,"correo":"gonza@gmail.com"},
+    {"id":4, "nombre":"Karen", "edad":22,"correo":"karen@gmail.com"},
 ]
 
 @app.get("/", tags=['Inicio'])
 def main():
-    return {"Hola": "Mundo FastAPI!"}
+    return{"message": "!Bienvenido a FasAPI!"}
 
-#Endpoint para generar token
-@app.post("/auth/", tags=['Autenticación'])
-def auth(credenciales: modelAuth):
-    if credenciales.mail == "pepe@example.com" and credenciales.passw == "123456789":
-        token:str = createToken(credenciales.model_dump())
+
+
+
+
+#Endpoint de tipo POST para tokens
+@app.post("/auth", tags=['Autentificacion'])
+def auth(credenciales:modelAuth):
+    if credenciales.mail == 'pepe@gmail.com' and credenciales.passw == '1234567890':
+        token: str = createToken(credenciales.model_dump())
         print(token)
-        return {"Aviso":"Token generado exitosamente"}
+        return {"Aviso:": "Token Generado"}
     else:
-        return {"Aviso:":"Usuario no cuenta con permiso"}
+        return{"Aviso:": "Credenciales incorrectas"}
 
-#Endpoint para consultar todos los usuarios
+
+
+
+
+
+# Enpoint CONSULTA TODOS
 @app.get("/todosUsuarios/", response_model=List[modelUsuario], tags=['Operaciones CRUD'])
-def leer():
+def leer(token: str = Depends(BearerJWT())):
     return usuarios
 
-#Endpoint para guardar usuarios
-@app.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
-def guardar(usuario: modelUsuario):
+
+#Endpoint de tipo POST
+@app.post("/usuarios/", response_model= modelUsuario, tags=['Operaciones CRUD'])
+def guardar(usuario:modelUsuario):
     for usr in usuarios:
-        if usr["id"] == usuario.id:
-            raise HTTPException(status_code=400, detail="El usuario ya existe")
+        if usr["id"]==usuario.id:
+         raise HTTPException(status_code=400, detail="El usuario ya existe")
     usuarios.append(usuario.dict())
     return usuario
 
-#Endpoint para actualizar usuarios
-@app.put("/usuarios/{id}", response_model=modelUsuario, tags=['Operaciones CRUD'])
-def actualizar(id: int, usuarioActualizado: modelUsuario):
+#Endpoint para actualizar
+@app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
+def actualizar(id:int, usuarioActualizado: modelUsuario):
     for index, usr in enumerate(usuarios):
-        if usr["id"] == id:
-            usuarios[index] = usuarioActualizado.model_dump()
+        if usr["id"]==id:
+            usuarios[index]=usuarioActualizado.model_dump()
             return usuarios[index]
     raise HTTPException(status_code=400, detail="El usuario no existe")
 
-#Endpoint para eliminar usuarios
+
+
+#Endpoint para eliminar
 @app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
-def eliminar(id: int):
+def eliminar(id:int):
     for index, usr in enumerate(usuarios):
-        if usr["id"] == id:
+        if usr["id"]==id:
             usuarios.pop(index)
-            return {'Usuarios Registrados: ': usuarios}
+            return { 'Usuarios Registrados: ': usuarios}
     raise HTTPException(status_code=400, detail="El usuario no existe")
