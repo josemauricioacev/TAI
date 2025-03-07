@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
-from typing import Optional, List # define para que los caracteres en las api sean opcionales o no
+from fastapi.responses import JSONResponse
+from typing import Optional, List 
 from pydantic import BaseModel
 from models import modelUsuario, modelAuth
 from genToken import createToken
@@ -11,6 +12,7 @@ app = FastAPI(
     version="1.0.1"
 )
 
+# Lista de todos los usuarios
 usuarios=[
     {"id":1, "nombre":"Armando", "edad":20,"correo":"armando@gmail.com"},
     {"id":2, "nombre":"Pepe", "edad":20,"correo":"pepe@gmail.com"},
@@ -20,34 +22,24 @@ usuarios=[
 
 @app.get("/", tags=['Inicio'])
 def main():
-    return{"message": "!Bienvenido a FasAPI!"}
+    return{"message": "¡Bienvenido a FastAPI!"}
 
-
-
-
-
-#Endpoint de tipo POST para tokens
+#Endpoint para autenticar
 @app.post("/auth", tags=['Autentificacion'])
-def auth(credenciales:modelAuth):
-    if credenciales.mail == 'pepe@gmail.com' and credenciales.passw == '1234567890':
-        token: str = createToken(credenciales.model_dump())
+def login(autorizado:modelAuth):
+    if autorizado.mail == 'pepe@gmail.com' and autorizado.passw == '1234567890':
+        token: str = createToken(autorizado.model_dump())
         print(token)
-        return {"Aviso:": "Token Generado"}
+        return JSONResponse(content=token)
     else:
         return{"Aviso:": "Credenciales incorrectas"}
 
-
-
-
-
-
-# Enpoint CONSULTA TODOS
+# Enpoint para consultar todos los usuarios
 @app.get("/todosUsuarios/", response_model=List[modelUsuario], tags=['Operaciones CRUD'])
 def leer(token: str = Depends(BearerJWT())):
     return usuarios
 
-
-#Endpoint de tipo POST
+#Endpoint para agregar usuarios
 @app.post("/usuarios/", response_model= modelUsuario, tags=['Operaciones CRUD'])
 def guardar(usuario:modelUsuario):
     for usr in usuarios:
@@ -56,7 +48,7 @@ def guardar(usuario:modelUsuario):
     usuarios.append(usuario.dict())
     return usuario
 
-#Endpoint para actualizar
+#Endpoint para actualizar usuarios
 @app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado: modelUsuario):
     for index, usr in enumerate(usuarios):
@@ -65,9 +57,7 @@ def actualizar(id:int, usuarioActualizado: modelUsuario):
             return usuarios[index]
     raise HTTPException(status_code=400, detail="El usuario no existe")
 
-
-
-#Endpoint para eliminar
+#Endpoint para eliminar usuarios
 @app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
 def eliminar(id:int):
     for index, usr in enumerate(usuarios):
