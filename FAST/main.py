@@ -1,16 +1,20 @@
 from fastapi import FastAPI, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from typing import Optional, List 
+from typing import  List
 from pydantic import BaseModel
-from models import modelUsuario, modelAuth
-from genToken import createToken
+from modelsPydantic import modeloUsuario, modelAuth
+from genToken import creartoken
 from middleware import BearerJWT
+from fastapi.responses import JSONResponse
+from DB.conexion import Session, engine, Base
+from models.modelsDB import User
 
 app = FastAPI(
     title="Mi primera API",
     description="Jose Armando Mauricio Acevedo",
     version="1.0.1"
 )
+
+Base.metadata.create_all(bind=engine)
 
 # Lista de todos los usuarios
 usuarios=[
@@ -40,13 +44,25 @@ def leer(token: str = Depends(BearerJWT())):
     return usuarios
 
 #Endpoint para agregar usuarios
-@app.post("/usuarios/", response_model= modelUsuario, tags=['Operaciones CRUD'])
-def guardar(usuario:modelUsuario):
-    for usr in usuarios:
-        if usr["id"]==usuario.id:
-         raise HTTPException(status_code=400, detail="El usuario ya existe")
-    usuarios.append(usuario.dict())
-    return usuario
+#EndPoint POST
+@app.post("/usuarios/", response_model=modeloUsuario, tags=["Operaciones CRUD"]) #declarar ruta del servidor
+#primero se pide el parametro y luego el tipo de datp que estamos usando
+def guardar(usuario:modeloUsuario): #se guarda como usuario diccionario para pedir todos los usuarios juntos
+    db=Session() #se crea la sesion
+    try:
+        db.add(User(**usuario.model_dump())) #se agrega el usuario a la base de datos
+        db.commit() #se guarda el usuario
+        return JSONResponse(status_code=201,
+                            content={"mensaje": "Usuario guardado", ""
+                            "usuario": usuario.model_dump()}) #se regresa el mensaje de que se guardó el usuario
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500,
+                            content={"mensaje": "Error al guardar el usuario", 
+                                     "error": str(e)}) #se regresa el mensaje de que hubo un error al guardar el usuario
+
+    finally:
+        db.close()
 
 #Endpoint para actualizar usuarios
 @app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
