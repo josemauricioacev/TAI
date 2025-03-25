@@ -1,12 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
-from typing import  List
-from pydantic import BaseModel
-from modelsPydantic import modeloUsuario, modelAuth
-from genToken import creartoken
-from middleware import BearerJWT
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from typing import List
+from modelsPydantics import modelUsuario, modelAuth
+from genToken import createToken
 from DB.conexion import Session, engine, Base
 from models.modelsDB import User
+from middlewares import BearerJWT
+
 
 app = FastAPI(
     title="Mi primera API",
@@ -16,55 +17,93 @@ app = FastAPI(
 
 Base.metadata.create_all(bind=engine)
 
-# Lista de todos los usuarios
 usuarios=[
-    {"id":1, "nombre":"Armando", "edad":20,"correo":"armando@gmail.com"},
-    {"id":2, "nombre":"Pepe", "edad":20,"correo":"pepe@gmail.com"},
-    {"id":3, "nombre":"Gonza", "edad":21,"correo":"gonza@gmail.com"},
-    {"id":4, "nombre":"Karen", "edad":22,"correo":"karen@gmail.com"},
+    {"id":1, "nombre":"Angel", "edad":20,"correo":"angelmaryinez1@gmail.com"},
+    {"id":2, "nombre":"Daniel", "edad":20,"correo":"daniel@gmail.com"},
+    {"id":3, "nombre":"Alfredo", "edad":21,"correo":"alfredo@gmail.com"},
+    {"id":4, "nombre":"Aaron", "edad":22,"correo":"aaron@gmail.com"},
 ]
 
 @app.get("/", tags=['Inicio'])
 def main():
-    return{"message": "¡Bienvenido a FastAPI!"}
+    return{"message": "!Bienvenido a FasAPI!"}
 
-#Endpoint para autenticar
+
+
+
+
+#Endpoint de tipo POST para tokens
 @app.post("/auth", tags=['Autentificacion'])
-def login(autorizado:modelAuth):
-    if autorizado.mail == 'pepe@gmail.com' and autorizado.passw == '1234567890':
-        token: str = createToken(autorizado.model_dump())
+def auth(credenciales:modelAuth):
+    if credenciales.mail == 'angel@gmail.com' and credenciales.passw == '12345678':
+        token: str = createToken(credenciales.model_dump())
         print(token)
-        return JSONResponse(content=token)
+        return JSONResponse(content= token)
     else:
         return{"Aviso:": "Credenciales incorrectas"}
 
-# Enpoint para consultar todos los usuarios
-@app.get("/todosUsuarios/", response_model=List[modelUsuario], tags=['Operaciones CRUD'])
-def leer(token: str = Depends(BearerJWT())):
-    return usuarios
 
-#Endpoint para agregar usuarios
-#EndPoint POST
-@app.post("/usuarios/", response_model=modeloUsuario, tags=["Operaciones CRUD"]) #declarar ruta del servidor
-#primero se pide el parametro y luego el tipo de datp que estamos usando
-def guardar(usuario:modeloUsuario): #se guarda como usuario diccionario para pedir todos los usuarios juntos
-    db=Session() #se crea la sesion
+
+
+
+#EndPoint Consultar Usuarios (GET)
+@app.get("/todosUsuarios/", tags=["Operaciones CRUD"]) #declarar ruta del servidor
+def leer(): #funcion que se ejecutará cuando se entre a la ruta
+    db=Session()
     try:
-        db.add(User(**usuario.model_dump())) #se agrega el usuario a la base de datos
-        db.commit() #se guarda el usuario
-        return JSONResponse(status_code=201,
-                            content={"mensaje": "Usuario guardado", ""
-                            "usuario": usuario.model_dump()}) #se regresa el mensaje de que se guardó el usuario
+        consulta=db.query(User).all()
+        return JSONResponse(content=jsonable_encoder(consulta))
+    
     except Exception as e:
         db.rollback()
         return JSONResponse(status_code=500,
-                            content={"mensaje": "Error al guardar el usuario", 
+                            content={"mensaje": "No fue posible consultar al usuario.", 
                                      "error": str(e)}) #se regresa el mensaje de que hubo un error al guardar el usuario
 
     finally:
         db.close()
 
-#Endpoint para actualizar usuarios
+
+#EndPoint Consultar Usuarios por ID (GET)
+@app.get("/usuarios/{id}", tags=["Operaciones CRUD"]) #declarar ruta del servidor
+def leeruno(id:int): #funcion que se ejecutará cuando se entre a la ruta
+    db=Session()
+    try:
+        consulta1=db.query(User).filter(User.id==id).first()
+        if not consulta1:
+            return JSONResponse(status_code=404, content={'mensaje':"Usuario no encontrado"})
+        
+        return JSONResponse(content=jsonable_encoder(consulta1))
+    
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500,
+                            content={"mensaje": "No fue posible consultar al usuario.", 
+                                     "error": str(e)}) #se regresa el mensaje de que hubo un error al guardar el usuario
+
+    finally:
+        db.close()
+
+
+
+
+# Endpoint para registrar un nuevo usuario
+@app.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
+def guardar(usuario: modelUsuario):
+    db=Session()
+    try:
+        db.add(User(**usuario.model_dump()))
+        db.commit()
+        return JSONResponse(status_code=201, content={"message": "Usuario Guardado", "usuario": usuario.model_dump()})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"message": "Error al guardar", "Error": str(e)})
+    finally:
+        db.close()
+
+
+
+#Endpoint para actualizar
 @app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
 def actualizar(id:int, usuarioActualizado: modelUsuario):
     for index, usr in enumerate(usuarios):
@@ -73,7 +112,9 @@ def actualizar(id:int, usuarioActualizado: modelUsuario):
             return usuarios[index]
     raise HTTPException(status_code=400, detail="El usuario no existe")
 
-#Endpoint para eliminar usuarios
+
+
+#Endpoint para eliminar
 @app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
 def eliminar(id:int):
     for index, usr in enumerate(usuarios):
