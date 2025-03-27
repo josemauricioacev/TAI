@@ -87,7 +87,7 @@ def leeruno(id:int): #funcion que se ejecutará cuando se entre a la ruta
 
 
 
-# Endpoint para registrar un nuevo usuario
+#Endpoint para registrar un nuevo usuario
 @app.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
 def guardar(usuario: modelUsuario):
     db=Session()
@@ -103,22 +103,47 @@ def guardar(usuario: modelUsuario):
 
 
 
-#Endpoint para actualizar
-@app.put("/usuarios/{id}",response_model=modelUsuario, tags=['Operaciones CRUD'])
-def actualizar(id:int, usuarioActualizado: modelUsuario):
-    for index, usr in enumerate(usuarios):
-        if usr["id"]==id:
-            usuarios[index]=usuarioActualizado.model_dump()
-            return usuarios[index]
-    raise HTTPException(status_code=400, detail="El usuario no existe")
+#Endpoint para actualizar un usuario (PUT)
+@app.put("/usuarios/{id}", tags=["Operaciones CRUD"])
+def actualizar_usuario(id: int, usuario: modelUsuario):
+    db = Session()
+    try:
+        usuario_db = db.query(User).filter(User.id == id).first()
+        if not usuario_db:
+            return JSONResponse(status_code=404, content={"mensaje": "Usuario no encontrado"})
+        
+        usuario_data = usuario.model_dump()
+        for key, value in usuario_data.items():
+            setattr(usuario_db, key, value)
+        
+        db.commit()
+        return JSONResponse(content={"mensaje": "Usuario actualizado correctamente", "usuario": jsonable_encoder(usuario_db)})
+    
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                          content={"mensaje": "Error al actualizar el usuario", 
+                                   "error": str(e)})
+    finally:
+        db.close()
 
-
-
-#Endpoint para eliminar
-@app.delete("/usuarios/{id}", tags=['Operaciones CRUD'])
-def eliminar(id:int):
-    for index, usr in enumerate(usuarios):
-        if usr["id"]==id:
-            usuarios.pop(index)
-            return { 'Usuarios Registrados: ': usuarios}
-    raise HTTPException(status_code=400, detail="El usuario no existe")
+#Endpoint para eliminar un usuario (DELETE)
+@app.delete("/usuarios/{id}", tags=["Operaciones CRUD"])
+def eliminar_usuario(id: int):
+    db = Session()
+    try:
+        usuario_db = db.query(User).filter(User.id == id).first()
+        if not usuario_db:
+            return JSONResponse(status_code=404, content={"mensaje": "Usuario no encontrado"})
+        
+        db.delete(usuario_db)
+        db.commit()
+        return JSONResponse(content={"mensaje": f"Usuario con ID {id} eliminado correctamente"})
+    
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, 
+                          content={"mensaje": "Error al eliminar el usuario", 
+                                   "error": str(e)})
+    finally:
+        db.close()
