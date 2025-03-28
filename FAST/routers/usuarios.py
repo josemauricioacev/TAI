@@ -1,44 +1,19 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from typing import List
-from modelsPydantics import modelUsuario, modelAuth
-from genToken import createToken
+from modelsPydantics import modelUsuario
 from DB.conexion import Session, engine, Base
 from models.modelsDB import User
 from middlewares import BearerJWT
-from routers.usuarios import routerUsuario #Agregamos importacion
-from routers.auth import routerAuth
+from fastapi import APIRouter #Agregamos nueva importacion
 
-app = FastAPI(
-    title="Mi primera API",
-    description="Jose Armando Mauricio Acevedo",
-    version="1.0.1"
-)
-
-Base.metadata.create_all(bind=engine)
-
-app.include_router(routerUsuario)
-app.include_router(routerAuth)
-
-@app.get("/", tags=['Inicio'])
-def main():
-    return{"message": "!Bienvenido a FasAPI!"}
+routerUsuario = APIRouter()
 
 
-#Endpoint de tipo POST para tokens
-@app.post("/auth", tags=['Autentificacion'])
-def auth(credenciales:modelAuth):
-    if credenciales.mail == 'angel@gmail.com' and credenciales.passw == '12345678':
-        token: str = createToken(credenciales.model_dump())
-        print(token)
-        return JSONResponse(content= token)
-    else:
-        return{"Aviso:": "Credenciales incorrectas"}
-
+# -------------------------- CRUD DE USUARIOS -------------------------- #
 
 #EndPoint Consultar Usuarios (GET)
-@app.get("/todosUsuarios/", tags=["Operaciones CRUD"]) #declarar ruta del servidor
+@routerUsuario.get("/todosUsuarios/", tags=["Operaciones CRUD"]) #declarar ruta del servidor
 def leer(): #funcion que se ejecutará cuando se entre a la ruta
     db=Session()
     try:
@@ -56,7 +31,7 @@ def leer(): #funcion que se ejecutará cuando se entre a la ruta
 
 
 #EndPoint Consultar Usuarios por ID (GET)
-@app.get("/usuarios/{id}", tags=["Operaciones CRUD"]) #declarar ruta del servidor
+@routerUsuario.get("/usuarios/{id}", tags=["Operaciones CRUD"]) #declarar ruta del servidor
 def leeruno(id:int): #funcion que se ejecutará cuando se entre a la ruta
     db=Session()
     try:
@@ -76,8 +51,10 @@ def leeruno(id:int): #funcion que se ejecutará cuando se entre a la ruta
         db.close()
 
 
-#Endpoint para registrar un nuevo usuario
-@app.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
+
+
+#Endpoint para registrar un nuevo usuario (POST)
+@routerUsuario.post("/usuarios/", response_model=modelUsuario, tags=['Operaciones CRUD'])
 def guardar(usuario: modelUsuario):
     db=Session()
     try:
@@ -91,8 +68,9 @@ def guardar(usuario: modelUsuario):
         db.close()
 
 
+
 #Endpoint para actualizar un usuario (PUT)
-@app.put("/usuarios/{id}", tags=["Operaciones CRUD"])
+@routerUsuario.put("/usuarios/{id}", tags=["Operaciones CRUD"])
 def actualizar_usuario(id: int, usuario: modelUsuario):
     db = Session()
     try:
@@ -115,9 +93,8 @@ def actualizar_usuario(id: int, usuario: modelUsuario):
     finally:
         db.close()
 
-
 #Endpoint para eliminar un usuario (DELETE)
-@app.delete("/usuarios/{id}", tags=["Operaciones CRUD"])
+@routerUsuario.delete("/usuarios/{id}", tags=["Operaciones CRUD"])
 def eliminar_usuario(id: int):
     db = Session()
     try:
