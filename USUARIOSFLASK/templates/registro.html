@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro de Usuario</title>
+</head>
+<body>
+    <h1>Registro de Usuario</h1>
+    <form method="POST" action="/usuariosFastAPI">
+        <label>Nombre:</label>
+        <input type="text" name="txtNombre" required><br>
+        
+        <label>Edad:</label>
+        <input type="number" name="txtEdad" required><br>
+        
+        <label>Correo:</label>
+        <input type="email" name="txtCorreo" required><br>
+        
+        <button type="submit">Enviar</button>
+    </form>
+    
+    <!-- Para mostrar mensajes flash -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

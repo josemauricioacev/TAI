@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\DELL\OneDrive\Documentos\GitHub\TAI\FAST\entornoFast"
+VIRTUAL_ENV="C:\Users\DELL\GitHub\TAI\FAST\entornoFast"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

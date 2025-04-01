@@ -9,6 +9,8 @@ from models.modelsDB import User
 from middlewares import BearerJWT
 from routers.usuarios import routerUsuario #Agregamos importacion
 from routers.auth import routerAuth
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(
     title="Mi primera API",
@@ -20,6 +22,14 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(routerUsuario)
 app.include_router(routerAuth)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Lista con el string "*"
+    allow_credentials=True,
+    allow_methods=["*"],  # Lista con el string "*"
+    allow_headers=["*"]   # Lista con el string "*"
+)
 
 @app.get("/", tags=['Inicio'])
 def main():
