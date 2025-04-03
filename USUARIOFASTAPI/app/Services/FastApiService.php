@@ -41,4 +41,24 @@ class FastApiService
             return ['error' => 'No se pudo conectar con el servidor. Verifica tu conexión.'];
         }
     }
+
+    public function put($endpoint, $data = [])
+    {
+        try {
+            $response = $this->client->put($endpoint, ['json' => $data]);
+            return json_decode($response->getBody(), true);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            return ['error' => 'No se pudo conectar con el servidor. Verifica tu conexión.'];
+        }
+    }
+
+    public function delete($endpoint)
+    {
+        try {
+            $response = $this->client->delete($endpoint);
+            return json_decode($response->getBody(), true);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            return ['error' => 'No se pudo conectar con el servidor. Verifica tu conexión.'];
+        }
+    }
 }
