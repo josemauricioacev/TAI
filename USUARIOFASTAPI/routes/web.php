@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\userController;
 
-Route::get('/', [UserController::class, 'inicio'])->name('usuario.inicio');
+Route::get('/', [userController::class, 'inicio'])->name('usuario.inicio');
 
-Route::post('/addUser', [UserController::class, 'store'])->name('usuario.store');
+Route::post('/addUser', [userController::class, 'store'])->name('usuario.store');
 
-Route::get('/usuarios', [UserController::class, 'index'])->name('usuario.index');
+Route::get('/usuarios', [userController::class, 'index'])->name('usuario.index');

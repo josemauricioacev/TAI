@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Usuarios</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
-        integrity="sha384-QWTK2yJiP6Ji5sVWaRU9OF6Rpok6YctYnDrSpNLyT2RpjXh0JfhY6hW+ALeWI" crossorigin="anonymous">
+       <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
+         crossorigin="anonymous">
 </head>
 
 <body>
@@ -42,7 +42,7 @@
     </form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-Yupcrf0tY3lMB6NNkmXc5s9fDVZLEsaAASSNDzQxhY9kcIds1XleN7N6jIehZ" crossorigin="anonymous"></script>
+         crossorigin="anonymous"></script>
 </body>
 
 </html>
